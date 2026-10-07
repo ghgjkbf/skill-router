@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "generated": "2026-10-07",
+  "generated_by": "your-agent (AI 初比对, 方法见 PROMPT.md)",
+  "inventory_hash": "粘贴 scan 输出的 inventory_hash",
+  "scope_note": "扫描根由 SKILL_ROUTER_ROOT/--root 决定;不在扫描范围但确定存在的技能(如聚合层技能)可作为路由目标,verify 会将其列为 missing 属预期",
+  "auto_policy": {
+    "min_top_score": 2,
+    "dominance_ratio": 2
+  },
+  "skill_signals": {
+    "photo-editor-skill": ["照片", "图片", "修图", "调亮", "调色", "裁剪", "抠图", "图层", "psd", "导出"],
+    "image-gen-skill": ["生成图片", "画一张", "文生图", "插画", "concept art"]
+  },
+  "conflicts": [
+    {
+      "id": "video-generation-vs-html-render",
+      "domain": "视频",
+      "members": ["video-gen-skill", "html-render-tool"],
+      "routes": [
+        {
+          "use": "html-render-tool",
+          "when": ["产品发布", "launch.?video", "motion.?graphics", "动效", "幻灯片", "字幕(包装|特效|动画)", "html.?合成", "时间轴"],
+          "note": "经其入口技能路由,工作流技能按需安装"
+        },
+        {
+          "use": "video-gen-skill",
+          "default": true,
+          "when": ["生成.{0,8}视频", "做个?视频", "短视频", "文生视频", "口播", "图生视频", "text.?to.?video"]
+        }
+      ],
+      "adjudication": "默认生成式视频;任务特征为 HTML 合成渲染的精确时间轴/图层/品牌化动效时用 html-render-tool。"
+    },
+    {
+      "id": "image-generate-vs-edit",
+      "domain": "图像",
+      "members": ["image-gen-skill", "photo-editor-skill"],
+      "routes": [
+        {
+          "use": "photo-editor-skill",
+          "when": ["编辑图片", "改图", "修图", "psd", "图层", "抠图", "调色", "已有图片", "这张图"],
+          "note": "对已有图像做工程化编辑"
+        },
+        {
+          "use": "image-gen-skill",
+          "default": true,
+          "when": ["生成图片", "画一张", "文生图", "多图合成", "画个", "插画"]
+        }
+      ],
+      "adjudication": "默认生成式;操作对象是已有图像文件、或需要分层/精确像素控制时用编辑技能。生成技能的产出可作为编辑技能的输入素材,两者是上下游不是竞争。"
+    }
+  ]
+}
